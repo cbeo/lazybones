@@ -1,7 +1,16 @@
 ;;;; package.lisp
 
 (defpackage #:lazybones
-  (:use #:cl #:alexandria #:iterate)
+  (:use #:cl)
+  (:import-from #:alexandria
+                #:if-let
+                #:when-let*)
+  (:import-from #:iterate
+                #:iter
+                #:for
+                #:in
+                #:collect)
+  (:nicknames :lzb)
   (:export
 
    #:*body*
