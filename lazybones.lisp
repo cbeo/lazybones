@@ -79,6 +79,8 @@ CONTENT-TYPE is a string, a mimetype.
 
 CONTENT is a list of strings. It can be other stuff but CLACK has
 abysmal documentation."
+  (when (typep (car content) '(simple-array (unsigned-byte 8)))
+    (setq content (car content)))
   (list 200
         (list* :content-type content-type
                :content-length (content-length content)
