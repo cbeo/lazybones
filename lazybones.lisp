@@ -60,7 +60,7 @@ definition."
 If no matching decoder is found in the *DECODERS* ALIST, then the 
 STREAM itself is returned unaltered.
 "
-  (if-let ((decoder (assoc content-type *decoders* :test #'string-equal)))
+  (if-let ((decoder (assoc content-type *decoders* :test (lambda (ct key) (starts-with-subseq key ct)))))
     (funcall (cdr decoder) stream  content-length)
     stream))
 
