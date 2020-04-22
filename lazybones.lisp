@@ -187,18 +187,20 @@ already extant route key.
 
 Returns two values, a possible argument list to pass to the route
 handler and a boolean indicating success"
-  (let (args)
-    (loop
-       :for req-part :in req-key
-       :for route-part :in route-key
-       :do (cond
-             ((path-var-p route-part)
-              (push req-part args))
+  (if (not (= (length req-key) (length route-key)))
+      (values nil nil)
+      (let (args)
+        (loop
+           :for req-part :in req-key
+           :for route-part :in route-key
+           :do (cond
+                 ((path-var-p route-part)
+                  (push req-part args))
 
-             ((not (route-part-match-p req-part route-part))
-              (return-from match-route-key (values nil nil)))))
+                 ((not (route-part-match-p req-part route-part))
+                  (return-from match-route-key (values nil nil)))))
 
-    (values (reverse  args) t)))
+        (values (reverse  args) t))))
 
 
 (defun lookup-route (req)
