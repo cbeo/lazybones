@@ -1,12 +1,32 @@
 
 (in-package #:lazybones.decoders)
 
+;;; HELPERS
+
 (defun read-body-to-string (stream content-length)
   "Reads CONTENT-LENGTH characters from STREAM and returns a string."
   (let ((string (make-string content-length)))
     (read-sequence string stream)
     string))
 
+
+(defun binary-content-p (content-type)
+  (or (alexandria:starts-with-subseq "image" content-type)
+      (alexandria:starts-with-subseq "audio" content-type)
+      (and (alexandria:starts-with-subseq "application" content-type)
+           (not (equal content-type "application/json")))
+      (alexandria:starts-with-subseq "video" content-type)))
+
+
+(defun butlast-to-string (res)
+  (map 'string 'identity (butlast res)))
+
+(defun make-keyword (str)
+  (read-from-string (format nil ":~a" str)))
+
+(defun write-binary-to-tmp-file (body)
+  (cl-fad:with-output-to-temporary-file (out-file :element-type '(unsigned-byte 8))
+    (loop :for char :across body :do (write-byte (char-int char) out-file))))
 
 ;;; PLAIN TEXT DECODER
 
@@ -28,22 +48,6 @@
 
 
 ;;; MULTIPART/FORM-DATA DECODER
-
-
-(defun butlast-to-string (res)
-  (map 'string 'identity (butlast res)))
-
-(defun make-keyword (str)
-  (read-from-string (format nil ":~a" str)))
-
-(defun write-image-to-tmp-file (body)
-  (cl-fad:with-output-to-temporary-file (out-file :element-type '(unsigned-byte 8))
-    (loop :for char :across body :do (write-byte (char-int char) out-file))))
-
-(defun dump-stream-to-text (stream)
-  (with-output-to-string (out)
-    (loop :for char = (read-char stream nil nil)
-         :while char :do (write-char char out))))
 
 (<<def <crlf< (<<and (<<char #\Return)
                      (<<char #\Newline))
@@ -84,6 +88,8 @@ becomes   (:content-disposition (:name \"file\" :filename \"mypic.png\"))")
                               (string-trim '(#\Space) value)))))
 
 
+
+
 (defun <<multipart/form-data-part (stop-seq)
   (<<let ((disp (<<and (<<? <crlf<)
                        <multipart-header-content-disposition<))
@@ -94,8 +100,8 @@ becomes   (:content-disposition (:name \"file\" :filename \"mypic.png\"))")
                                               (<<string stop-seq)))))))
          (<<result
           (let ((all-headers (nconc disp (apply 'append  headers))))
-            (if (getf all-headers :content-type)
-                (nconc all-headers (list :body (write-image-to-tmp-file body)))
+            (if (binary-content-p (getf all-headers :content-type))
+                (nconc all-headers (list :body (write-binary-to-tmp-file body)))
                 (nconc all-headers (list :body body)))))))
 
 
@@ -112,7 +118,7 @@ becomes   (:content-disposition (:name \"file\" :filename \"mypic.png\"))")
   (let* ((boundary (concatenate 'string "--"
                                 (second (split-sequence:split-sequence #\= content-type))))
          (stream (make-instance 'replay-streams:static-text-replay-stream
-                                :text (dump-stream-to-text stream)))) ; Wouldn't work with raw stream
+                                :text (read-body-to-string stream content-length)))) ; Wouldn't work with raw stream
     (parse stream (<<multipart/form-data boundary))))
 
 (add-decoder "multipart/form-data" #'decode-multipart/form-data)
