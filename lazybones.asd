@@ -8,4 +8,5 @@
   :serial t
   :depends-on (#:clack #:jonathan  #:alexandria #:split-sequence)
   :components ((:file "package")
-               (:file "lazybones")))
+               (:file "lazybones")
+               (:file "decoders")))

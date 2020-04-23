@@ -43,18 +43,7 @@ definition."
     (push (cons mimetype decoder)
           *decoders*)))
 
-(defun read-body-to-string (stream content-length)
-  "Reads CONTENT-LENGTH characters from STREAM and returns a string."
-  (let ((string (make-string content-length)))
-    (read-sequence string stream)
-    string))
 
-
-(defun decode-json-body (stream len)
-  "Reads LEN characters from stream and decodes them as JSON, returning a PLIST"
-  (jonathan:parse (read-body-to-string stream len)))
-
-(add-decoder "application/json" #'decode-json-body)
 
 
 (defun decode-body (stream content-type content-length)

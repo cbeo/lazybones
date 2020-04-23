@@ -22,3 +22,8 @@
    #:start
    #:stop
    ))
+
+(defpackage #:lazybones.decoders
+  (:use #:cl)
+  (:import-from #:lazybones
+                #:add-decoder))
