@@ -15,12 +15,14 @@
    #:*resp-headers*
    #:add-decoder
    #:add-header
+   #:current-handler
    #:defroute
    #:http-err
    #:http-ok
    #:reload
    #:start
    #:stop
+   #:with-handler-preamble
    ))
 
 (defpackage #:lazybones.decoders

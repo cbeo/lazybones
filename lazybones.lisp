@@ -8,7 +8,7 @@
   "Clack handler top-level handler.")
 
 (defvar *routes* nil
-  "Datastructure tha tmaps routes to route handlers.")
+  "Datastructure that maps routes to route handlers.")
 
 (defvar *req* nil
   "A PLIST that bound by and available to route handlers.")
@@ -126,6 +126,23 @@ E.g.: /foo/bar/:goo/zar/:moo  would result in  (GOO MOO)"
   (loop :for val :in (split-sequence:split-sequence #\/ path-spec)
        :when (path-var-p val) :collect (read-from-string (subseq val 1))))
 
+(defmacro with-handler-preamble (preamble &body route-defs)
+  "Inserts PREAMBLE form into the beginning of each ROUTE-DEF, which
+must be a valid DEFROUTE form.
+
+WITH-HANDLER-PREAMBLE is useful for adding resource control or
+preparation to big blocks of routes. E.g. ensuring authorization,
+setting up variables, etc.
+"
+  (let ((transformed
+         (loop
+            :for (_ method path . handler-forms) :in route-defs
+            :collect (list* 'lazybones:defroute
+                            method
+                            path
+                            (cons preamble handler-forms)))))
+    `(progn ,@transformed)))
+
 (defmacro defroute (method path &rest body)
   "Defines a new route handler.
 
@@ -134,7 +151,8 @@ Method is one of :GET :POST :PUT etc...
 PATH is a string representing a URL path. The PATH may contain
 variable segmets, that start with a colon.
 
-The new route is added to the currently defined routes and is available for use.
+The new route is added to the currently defined routes and is
+available for use.
 
 If the METHOD has a body, then the defined route handler will
 automatically decode the body according the the request's
@@ -144,7 +162,11 @@ Content-Length and Content-Type headers, which will then be bound to
 A special variable *RESP-HEADERS* is also bound to NIL at the start of
 the handler, and can be used to add headers to a successful response. 
 
-The request PLIST is boudn to *REQ* for the extent of the handler."
+The request PLIST is boudn to *REQ* for the extent of the handler.
+
+A handler is wrapped in an implicit block called
+CURRENT-HANDLER, allowing for non-local exits via (RETURN-FROM CURRENT-HANDLER ...)
+"
   (let ((arglist (path-to-arglist path))
         (key (cons method (split-sequence:split-sequence #\/ path))))
     (if (member method '(:post :put))
@@ -154,10 +176,11 @@ The request PLIST is boudn to *REQ* for the extent of the handler."
                                                  (getf *req* :content-type)
                                                  (getf *req* :content-length)))
                             (*resp-headers* nil))
-                        ,@body)))
+                        (block current-handler ,@body))))
         `(add-route ',key
                     (lambda (*req* ,@arglist)
-                      (let (*resp-headers*) ,@body))))))
+                      (let (*resp-headers*)
+                        (block current-handler ,@body)))))))
 
 
 (defun route-part-match-p (word1 word2)
