@@ -112,7 +112,7 @@ becomes   (:content-disposition (:name \"file\" :filename \"mypic.png\"))")
   (let* ((boundary (concatenate 'string "--"
                                 (second (split-sequence:split-sequence #\= content-type))))
          (stream (make-instance 'replay-streams:static-text-replay-stream
-                                :text (dump-stream-to-text stream))))
+                                :text (dump-stream-to-text stream)))) ; Wouldn't work with raw stream
     (parse stream (<<multipart/form-data boundary))))
 
 (add-decoder "multipart/form-data" #'decode-multipart/form-data)
