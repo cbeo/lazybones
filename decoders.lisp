@@ -51,12 +51,12 @@
 
 
 (<<def <word-plus<
-       (<<to-string (<<+  (<<or parzival:<alphanum< (<<any-char "-_/. "))))
+       (<<to-string (<<+  (<<or <alphanum< (<<any-char "-_/. "))))
        "parses a word like foo-bar or foo-bar-zoo4")
 
 
 (<<def <key-equal-val<
-       (<<let ((key (<<and parzival:<whitespace< <word-plus<))
+       (<<let ((key (<<and <whitespace< <word-plus<))
                (val (<<and (<<char #\=)
                            (<<char-brackets #\" <word-plus< #\"))))
               (<<result (list (make-keyword key) val)))
