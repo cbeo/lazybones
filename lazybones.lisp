@@ -44,16 +44,15 @@ definition."
           *decoders*)))
 
 
-
-
 (defun decode-body (stream content-type content-length)
   "Decodes the body according to the Content-Type header.
 
 If no matching decoder is found in the *DECODERS* ALIST, then the 
 STREAM itself is returned unaltered.
 "
-  (if-let ((decoder (assoc content-type *decoders* :test (lambda (ct key) (starts-with-subseq key ct)))))
-    (funcall (cdr decoder) stream  content-length)
+  (if-let ((decoder (assoc content-type *decoders*
+                           :test (lambda (ct key) (starts-with-subseq key ct)))))
+    (funcall (cdr decoder) stream  content-type content-length)
     stream))
 
 

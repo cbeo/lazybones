@@ -24,6 +24,6 @@
    ))
 
 (defpackage #:lazybones.decoders
-  (:use #:cl)
+  (:use #:cl #:parzival)
   (:import-from #:lazybones
                 #:add-decoder))

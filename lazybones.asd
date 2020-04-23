@@ -6,7 +6,7 @@
   :license  "Specify license here"
   :version "0.0.1"
   :serial t
-  :depends-on (#:clack #:jonathan  #:alexandria #:split-sequence)
+  :depends-on (#:clack #:jonathan  #:alexandria #:split-sequence #:parzival #:cl-fad)
   :components ((:file "package")
                (:file "lazybones")
                (:file "decoders")))
