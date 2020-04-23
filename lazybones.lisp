@@ -2,6 +2,8 @@
 
 (in-package #:lazybones)
 
+;;; SPECIAL VARS
+
 (defvar *handler* nil
   "Clack handler top-level handler.")
 
@@ -26,11 +28,20 @@ Bound by route handlers for POST, PUT, and PATCH requests.")
   "An ALIST holding (mimetype . decoder) pairs. Add a decoder to this
   to customize decoding of POST and PUT bodies.")
 
+;;; HANDLER UTILITIES 
+
 (defun add-header (key val)
   "Adds a header to the response headers. Can be used within a handler
 definition."
   (setf (getf *resp-headers* key) val))
 
+
+(defun add-decoder (mimetype decoder)
+  "Adds or replaces a DECODER function for supplied MIMETYPE"
+  (if-let ((decoder-pair (assoc mimetype *decoders* :test #'string-equal)))
+    (setf (cdr decoder-pair) decoder)
+    (push (cons mimetype decoder)
+          *decoders*)))
 
 (defun read-body-to-string (stream content-length)
   "Reads CONTENT-LENGTH characters from STREAM and returns a string."
@@ -42,14 +53,6 @@ definition."
 (defun decode-json-body (stream len)
   "Reads LEN characters from stream and decodes them as JSON, returning a PLIST"
   (jonathan:parse (read-body-to-string stream len)))
-
-
-(defun add-decoder (mimetype decoder)
-  "Adds or replaces a DECODER function for supplied MIMETYPE"
-  (if-let ((decoder-pair (assoc mimetype *decoders* :test #'string-equal)))
-    (setf (cdr decoder-pair) decoder)
-    (push (cons mimetype decoder)
-          *decoders*)))
 
 (add-decoder "application/json" #'decode-json-body)
 
@@ -132,11 +135,8 @@ handler, bound to the variable ID.
 
 E.g.: /foo/bar/:goo/zar/:moo  would result in  (GOO MOO)"
 
-  (iter (for val in (split-sequence:split-sequence #\/ path-spec))
-        (when (path-var-p val)
-          (collect (read-from-string (subseq val 1))))))
-
-
+  (loop :for val :in (split-sequence:split-sequence #\/ path-spec)
+       :when (path-var-p val) :collect (read-from-string (subseq val 1))))
 
 (defmacro defroute (method path &rest body)
   "Defines a new route handler.

@@ -6,11 +6,7 @@
                 #:if-let
                 #:when-let*
                 #:starts-with-subseq)
-  (:import-from #:iterate
-                #:iter
-                #:for
-                #:in
-                #:collect)
+
   (:nicknames :lzb)
   (:export
 
