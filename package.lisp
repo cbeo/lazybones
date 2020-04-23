@@ -15,7 +15,6 @@
    #:*resp-headers*
    #:add-decoder
    #:add-header
-   #:current-handler
    #:defroute
    #:http-err
    #:http-ok

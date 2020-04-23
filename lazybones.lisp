@@ -69,7 +69,27 @@ STREAM itself is returned unaltered.
 CONTENT-TYPE is a string, a mimetype.
 
 CONTENT is a list of strings. It can be other stuff but CLACK has
-abysmal documentation."
+abysmal documentation.
+
+The function symbol HTTP-OK also has a different meaning when used
+within the body of a DEFROUTE form.  There it will early escape from
+the route handler with the value as described above. 
+
+E.G. Consider the form 
+
+(http-ok \"text/plain\" \"OK\")  
+
+Outsidef of a DEFROUTE this returns the list
+
+(200 (:CONTENT-TYPE \"text/plain\" :CONTENT-LENGTH 2) (\"OK\"))
+
+But inside of a DEFROUTE, the same form would be equivalent to something like
+
+(return-from #HANDERL123 
+  (apply #'http-ok \"text/plain\" (\"OK\")))
+
+where #HANDERL123 is a block label unique to the handler.
+"
   (when (typep (car content) '(simple-array (unsigned-byte 8)))
     (setq content (car content)))
   (list 200
@@ -167,20 +187,30 @@ The request PLIST is boudn to *REQ* for the extent of the handler.
 A handler is wrapped in an implicit block called
 CURRENT-HANDLER, allowing for non-local exits via (RETURN-FROM CURRENT-HANDLER ...)
 "
-  (let ((arglist (path-to-arglist path))
-        (key (cons method (split-sequence:split-sequence #\/ path))))
+  (let* ((arglist (path-to-arglist path))
+         (key (cons method (split-sequence:split-sequence #\/ path)))
+         (block-label (gensym "HANDLER"))
+         (body-block `(block ,block-label
+                       (flet ((http-ok (content-type &rest content)
+                                (return-from ,block-label
+                                  (apply #'http-ok content-type content)))
+                              (http-err (code text)
+                                (return-from ,block-label
+                                  (funcall #'http-err code text))))
+                         ,@body))))
+    
     (if (member method '(:post :put))
         `(add-route ',key
                     (lambda (*req* ,@arglist)
                       (let ((*body* (decode-body (getf *req* :raw-body)
                                                  (getf *req* :content-type)
                                                  (getf *req* :content-length)))
-                            (*resp-headers* nil))
-                        (block current-handler ,@body))))
+                            (*resp-headers*))
+                        ,body-block)))
         `(add-route ',key
                     (lambda (*req* ,@arglist)
                       (let (*resp-headers*)
-                        (block current-handler ,@body)))))))
+                        ,body-block))))))
 
 
 (defun route-part-match-p (word1 word2)
