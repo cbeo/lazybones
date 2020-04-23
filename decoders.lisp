@@ -8,6 +8,15 @@
     string))
 
 
+;;; PLAIN TEXT DECODER
+
+(defun decode-plain-text (stream content-type content-length)
+  (declare (ignore content-type))
+  (read-body-to-string stream content-length))
+
+(add-decoder "text/plain" #'decode-plain-text)
+
+
 ;;; JSON DECODER
 
 (defun decode-json-body (stream content-type content-length)
