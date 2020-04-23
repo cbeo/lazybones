@@ -1,9 +1,9 @@
 ;;;; lazybones.asd
 
 (asdf:defsystem #:lazybones
-  :description "Describe lazybones here"
-  :author "Your Name <your.name@example.com>"
-  :license  "Specify license here"
+  :description "http route handling"
+  :author "Colin Okay <cbeok@protonmail.com>"
+  :license  "AGPLv3"
   :version "0.0.1"
   :serial t
   :depends-on (#:clack #:jonathan  #:alexandria #:split-sequence #:parzival #:cl-fad)
