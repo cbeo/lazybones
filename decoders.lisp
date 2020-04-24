@@ -114,10 +114,11 @@ becomes   (:content-disposition (:name \"file\" :filename \"mypic.png\"))")
          (<<result parts)))
 
 (defun decode-multipart/form-data (stream content-type content-length)
-  (let* ((boundary (concatenate 'string "--"
+  (let* ((boundary (concatenate 'string
+                                "--"
                                 (second (split-sequence:split-sequence #\= content-type))))
          (stream (make-instance 'replay-streams:static-text-replay-stream
-                                :text (read-body-to-string stream content-length)))) ; Wouldn't work with raw stream
+                                :text (read-body-to-string stream content-length)))) 
     (parse stream (<<multipart/form-data boundary))))
 
 (add-decoder "multipart/form-data" #'decode-multipart/form-data)
@@ -135,4 +136,5 @@ becomes   (:content-disposition (:name \"file\" :filename \"mypic.png\"))")
                  :appending (list (make-keyword key)
                                   (urldecode undecoded :queryp t))))))
 
-(add-decoder "application/x-www-form-urlencoded" #'decode-application/x-www-form-urlencoded)
+(add-decoder "application/x-www-form-urlencoded"
+             #'decode-application/x-www-form-urlencoded)
