@@ -6,7 +6,14 @@
   :license  "AGPLv3"
   :version "0.0.1"
   :serial t
-  :depends-on (#:clack #:jonathan  #:alexandria #:split-sequence #:parzival #:cl-fad)
+  :depends-on (#:clack
+               #:jonathan
+               #:alexandria
+               #:split-sequence
+               #:do-urlencode
+               #:arrows
+               #:parzival
+               #:cl-fad)
   :components ((:file "package")
                (:file "lazybones")
                (:file "decoders")))

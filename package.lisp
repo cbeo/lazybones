@@ -26,5 +26,12 @@
 
 (defpackage #:lazybones.decoders
   (:use #:cl #:parzival)
+  (:import-from #:split-sequence
+                #:split-sequence)
+  (:import-from #:arrows
+                #:->>
+                #:as->*)
+  (:import-from #:do-urlencode
+                #:urldecode)
   (:import-from #:lazybones
                 #:add-decoder))
