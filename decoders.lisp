@@ -110,7 +110,7 @@ becomes   (:content-disposition (:name \"file\" :filename \"mypic.png\"))")
   (<<let ((parts (<<and (<<string boundary)
                         <crlf<
                         (<<+ (<<multipart/form-data-part boundary))))
-          (ending (<<and (<<string "--") <crlf<)) )
+          (_ending (<<and (<<string "--") <crlf<)) )
          (<<result parts)))
 
 (defun decode-multipart/form-data (stream content-type content-length)
