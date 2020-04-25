@@ -1,3 +1,4 @@
+;;;; lazybones.decoders package.
 
 (in-package #:lazybones.decoders)
 
@@ -30,21 +31,21 @@
 
 ;;; PLAIN TEXT DECODER
 
-(defun decode-plain-text (stream content-type content-length)
+(defun decode-text/plain (stream content-type content-length)
   (declare (ignore content-type))
   (read-body-to-string stream content-length))
 
-(add-decoder "text/plain" #'decode-plain-text)
+(add-decoder "text/plain" #'decode-text/plain)
 
 
 ;;; JSON DECODER
 
-(defun decode-json-body (stream content-type content-length)
+(defun decode-application/json (stream content-type content-length)
   "Reads LEN characters from stream and decodes them as JSON, returning a PLIST"
   (declare (ignore content-type))
   (jonathan:parse (read-body-to-string stream content-length)))
 
-(add-decoder "application/json" #'decode-json-body)
+(add-decoder "application/json" #'decode-application/json)
 
 
 ;;; MULTIPART/FORM-DATA DECODER
