@@ -13,6 +13,8 @@
    #:*body*
    #:*req*
    #:*resp-headers*
+   #:*logging-p*
+   #:*logging-stream*
    #:add-decoder
    #:add-header
    #:defroute

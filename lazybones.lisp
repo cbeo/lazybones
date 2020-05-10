@@ -20,6 +20,12 @@ If no known decoder matches, holds a stream.
 
 Bound by route handlers for POST, PUT, and PATCH requests.")
 
+(defvar *logging-p* nil
+  "Set to T if you want ot log requests to the value of *logging-stream*.")
+
+(defvar *logging-stream* t
+  "Set to T (i.e the standard output) by default.")
+
 (defvar *resp-headers* nil
   "A PLIST bound at the beginning of every response. Can be used to
   add additional headers to responses valid responses.")
@@ -260,6 +266,8 @@ for the request's path."
 
 
 (defun main-handler (req)
+  (when *logging-p*
+    (format *logging-stream* "~a~%" req))
   (handler-case
       (multiple-value-bind (args handler) (lookup-route req)
         (if handler
