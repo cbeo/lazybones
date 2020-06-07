@@ -285,6 +285,6 @@ for the request's path."
 (defun stop ()
   (clack:stop *handler*))
 
-(defun reload ()
+(defun reload (&key (port 5000))
   (stop)
   (start))
