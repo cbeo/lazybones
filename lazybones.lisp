@@ -288,4 +288,4 @@ for the request's path."
 
 (defun reload (&key (port 5000))
   (stop)
-  (start))
+  (start :port port))
