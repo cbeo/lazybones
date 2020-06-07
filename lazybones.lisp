@@ -283,7 +283,8 @@ for the request's path."
   (setf *handler* (clack:clackup #'main-handler :port port)))
 
 (defun stop ()
-  (clack:stop *handler*))
+  (when *handler*
+    (clack:stop *handler*)))
 
 (defun reload (&key (port 5000))
   (stop)
