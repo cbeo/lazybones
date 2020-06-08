@@ -152,7 +152,8 @@ E.g.: /foo/bar/:goo/zar/:moo  would result in  (GOO MOO)"
   (loop :for val :in (split-sequence:split-sequence #\/ path-spec)
        :when (path-var-p val) :collect (read-from-string (subseq val 1))))
 
-(defmacro with-handler-preamble (preamble &body route-defs)
+
+(defmacro with-handler-preamble ((&rest preamble) &body route-defs)
   "Inserts PREAMBLE form into the beginning of each ROUTE-DEF, which
 must be a valid DEFROUTE form.
 
@@ -166,8 +167,9 @@ setting up variables, etc.
             :collect (list* 'lazybones:defroute
                             method
                             path
-                            (cons preamble handler-forms)))))
+                            (append preamble handler-forms)))))
     `(progn ,@transformed)))
+
 
 (defmacro defroute (method path &rest body)
   "Defines a new route handler.
