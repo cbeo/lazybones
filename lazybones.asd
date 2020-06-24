@@ -4,7 +4,7 @@
   :description "http route handling"
   :author "Colin Okay <cbeok@protonmail.com>"
   :license  "AGPLv3"
-  :version "0.0.1"
+  :version "0.1.0"
   :serial t
   :depends-on (#:clack
                #:jonathan

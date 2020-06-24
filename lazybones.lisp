@@ -34,6 +34,9 @@ Bound by route handlers for POST, PUT, and PATCH requests.")
   "An ALIST holding (mimetype . decoder) pairs. Add a decoder to this
   to customize decoding of POST and PUT bodies.")
 
+(defvar *fallback-response-mimetype* "application/octet-stream"
+  "What to serve files as if their mimetype is unknown")
+
 (defvar *file-handler-configs* nil
   "An ALIST holding (EXTENSION MIMETYPE READER).  
 
@@ -64,7 +67,14 @@ read that path from disk, returning either a string or a byte-vector."
 (defun get-file-handler-config (ext)
   "Looks up the mimetype for the file extention EXT. Returnes the
 mimetype as a string, or NIL"
-  (assoc ext *file-handler-configs* :test #'string-equal))
+  (assoc ext *file-handler-configs* :test #'equal))
+
+;;; UTILITY FUNCTIONS
+
+(defun clean-split-path (path)
+  (loop :for entry :in (split-sequence #\/ (namestring path))
+       :when (plusp (length entry)) :collect entry))
+
 
 ;;; HANDLER UTILITIES 
 
@@ -162,11 +172,10 @@ an error will be signalled. See also REGISTER-FILE-HANDLER-CONFIG."
      (constantly t)
      (lambda (subdir)
        (dolist (file (uiop:directory-files subdir))
+         (print file)
          (add-route
           (append key-prefix
-                  (split-sequence
-                   #\/
-                   (subseq (namestring file) prefix-len)))
+                  (clean-split-path (subseq (namestring file) prefix-len)))
           (make-file-handler file :headers headers :cache-p cache-p)))))))
 
 (defun make-file-handler
@@ -180,14 +189,15 @@ file.  If the file cannot be found on disk, an error will be raised
 and the server will return 500.
 
 If MIMETYPE is not specified, it will be determined from the file
-extension. If it cannot be determined from the file extension, an
-error will be raised.
+extension. If it cannot be determined from the file extension, the
+current value of *FALLBACK-RESPONSE-MIMETYPE* will be used,
+application/octet-stream  by default.
 
 FILE-READER names a function that reads file content from disk. It
 should accept a file name and return either a string or a byte
 vector. If it is not specified, it will be determined fromt he file
-extension. If it cannot be determined from the file extension, an
-error will be raised.
+extension. If it cannot be determined from the file extension,
+'ALEXANDRIA:READ-FILE-INTO-BYTE-VECTOR will be used.
 
 HEADERS is a PLIST of additional HTTP headers.  Content-Length need
 not be included as it will be determined automatically.
@@ -199,10 +209,10 @@ every request.  By default files are not cached."
          (config (get-file-handler-config ext))
          (mimetype (or mimetype
                        (second config)
-                       (error "Unknown mimetype for file ~s~%" file)))
+                       *fallback-response-mimetype*))
          (file-reader (or file-reader
                           (third config)
-                          (error "Unknown file-reader for file ~s" file)))
+                          'read-file-into-byte-vector))
          (content (if cache-p (funcall file-reader file)
                      (lambda () (funcall file-reader file)))))
     (lambda (*req*)
@@ -254,7 +264,7 @@ handler, bound to the variable ID.
 
 E.g.: /foo/bar/:goo/zar/:moo  would result in  (GOO MOO)"
 
-  (loop :for val :in (split-sequence:split-sequence #\/ path-spec)
+  (loop :for val :in (clean-split-path path-spec)
        :when (path-var-p val) :collect (read-from-string (subseq val 1))))
 
 
@@ -276,7 +286,7 @@ setting up variables, etc.
     `(progn ,@transformed)))
 
 (defun path-to-route-key (method path)
-  (cons method (split-sequence:split-sequence #\/ path)))
+  (cons method (clean-split-path path)))
 
 
 (defmacro defroute (method path &rest body)
@@ -367,7 +377,7 @@ function itself.  Both are NIL if the lookup failed to find a handler
 for the request's path."
   (when-let* ((path   (getf req :path-info))
               (method (getf req :request-method))
-              (key    (cons method (split-sequence:split-sequence #\/ path))))
+              (key    (path-to-route-key method path)))
     (loop :for (route-key . handler) :in *routes*
        :do (multiple-value-bind (args match-p) (match-route-key key route-key)
              (when match-p (return-from lookup-route (values args handler)))))

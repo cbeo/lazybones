@@ -29,7 +29,9 @@
 (register-many "image/" +image-mimetypes+ 'read-file-into-byte-vector)
 
 (defparameter +text-mimetypes+
-  '(("plain" "txt" "csv" "tsv" "org" "md")
+  '(("plain" "txt" "csv" "tsv" "org" "md"
+     "lisp" "py" "el" "c" "java" "scm" "rb" "rs" "cpp"
+     "hx")
     "css"
     ("html" "html" "htm")
     ("javascript" "js")))
