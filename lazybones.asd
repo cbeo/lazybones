@@ -13,7 +13,9 @@
                #:do-urlencode
                #:arrows
                #:parzival
+               #:uiop
                #:cl-fad)
   :components ((:file "package")
                (:file "lazybones")
+               (:file "fs-serve")
                (:file "decoders")))

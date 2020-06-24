@@ -5,11 +5,13 @@
   (:import-from #:alexandria
                 #:if-let
                 #:when-let*
+                #:read-file-into-string
+                #:read-file-into-byte-vector
                 #:starts-with-subseq)
+  (:import-from #:split-sequence #:split-sequence)
 
   (:nicknames :lzb)
   (:export
-
    #:*body*
    #:*req*
    #:*resp-headers*
@@ -17,6 +19,8 @@
    #:*logging-stream*
    #:add-decoder
    #:add-header
+   #:serve-directory
+   #:register-file-handler-config
    #:defroute
    #:http-err
    #:http-ok
@@ -37,3 +41,11 @@
                 #:urldecode)
   (:import-from #:lazybones
                 #:add-decoder))
+
+
+(defpackage #:lazybones.fs-serve
+  (:use #:cl)
+  (:import-from #:lazybones #:register-file-handler-config)
+  (:import-from #:alexandria
+                #:read-file-into-string
+                #:read-file-into-byte-vector))

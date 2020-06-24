@@ -34,6 +34,38 @@ Bound by route handlers for POST, PUT, and PATCH requests.")
   "An ALIST holding (mimetype . decoder) pairs. Add a decoder to this
   to customize decoding of POST and PUT bodies.")
 
+(defvar *file-handler-configs* nil
+  "An ALIST holding (EXTENSION MIMETYPE READER).  
+
+EXTENSION is a  string, a file extension. 
+
+MIMETYPE is a string, used for setting the Content-Type HTTP response
+header for files with extension EXTENSION.  
+
+READER is a function designator. The function should accept a OS path
+and return either a string or a byte-vector.")
+
+(defun register-file-handler-config (ext mimetype &optional (reader 'read-file-into-string))
+  "Downcases both arguments, which are assumed to be strings. 
+
+Adds the (EXT MIMETYPE READER) to the global file handler
+registry. Used to determine the Content-Type when serving files whose
+file extension is EXT.
+
+READER is a function designator. The function should accept a path and
+read that path from disk, returning either a string or a byte-vector."
+  (if-let (entry (assoc ext *file-handler-configs* :test #'string-equal))
+    (setf (second entry) (string-downcase mimetype)
+          (third entry) reader)
+    (push (list ext (string-downcase mimetype) reader)
+          *file-handler-configs*)))
+
+;; TODO raise a condition here in case of failure?
+(defun get-file-handler-config (ext)
+  "Looks up the mimetype for the file extention EXT. Returnes the
+mimetype as a string, or NIL"
+  (assoc ext *file-handler-configs* :test #'string-equal))
+
 ;;; HANDLER UTILITIES 
 
 (defun add-header (key val)
@@ -74,8 +106,13 @@ STREAM itself is returned unaltered.
 
 CONTENT-TYPE is a string, a mimetype.
 
-CONTENT is a list of strings. It can be other stuff but CLACK has
-abysmal documentation.
+CONTENT is either a list of strings or a byte vector. It can be other
+stuff but CLACK has abysmal documentation.
+
+HTTP-OK will determine the content length of the content automatically.
+
+Any headers currently contained in the *RESP-HEADERS* ALIST will be
+included in the response.
 
 The function symbol HTTP-OK also has a different meaning when used
 within the body of a DEFROUTE form.  There it will early escape from
@@ -103,6 +140,74 @@ where #HANDERL123 is a block label unique to the handler.
                :content-length (content-length content)
                *resp-headers*)
         content))
+
+(defun serve-directory (root-path root-dir &key headers cache-p)
+  "Adds handlers for every file in the directory tree with the root ROOT-DIR.
+
+The if PATH is the file pathname relative to ROOT-DIR, then the route
+added to serve the file located at PATH looks like ROOT-PATH/PATH. 
+
+HEADERS and CACHE-P are passed to MAKE-FILE-HANDLER as the keyword
+arguments of the same names.
+
+If the appropriate mimetype cannot be determined for any file
+encountered under the ROOT-DIR, then an error will be
+signalled. Similarly, if a file reading function cannot be determined
+an error will be signalled. See also REGISTER-FILE-HANDLER-CONFIG."
+  (let ((prefix-len  (length (namestring root-dir)))
+        (key-prefix (path-to-route-key :get root-path)))
+    (uiop:collect-sub*directories
+     root-dir
+     (constantly t)
+     (constantly t)
+     (lambda (subdir)
+       (dolist (file (uiop:directory-files subdir))
+         (add-route
+          (append key-prefix
+                  (split-sequence
+                   #\/
+                   (subseq (namestring file) prefix-len)))
+          (make-file-handler file :headers headers :cache-p cache-p)))))))
+
+(defun make-file-handler
+    (file &key
+            mimetype
+            file-reader
+            headers
+            cache-p)
+  "Given a path to a file, returns a handler function for serving that
+file.  If the file cannot be found on disk, an error will be raised
+and the server will return 500.
+
+If MIMETYPE is not specified, it will be determined from the file
+extension. If it cannot be determined from the file extension, an
+error will be raised.
+
+FILE-READER names a function that reads file content from disk. It
+should accept a file name and return either a string or a byte
+vector. If it is not specified, it will be determined fromt he file
+extension. If it cannot be determined from the file extension, an
+error will be raised.
+
+HEADERS is a PLIST of additional HTTP headers.  Content-Length need
+not be included as it will be determined automatically.
+
+CACHE-P determines whether or not the file is read from disk upon
+every request.  By default files are not cached."
+  (assert (probe-file file))
+  (let* ((ext (pathname-type file))
+         (config (get-file-handler-config ext))
+         (mimetype (or mimetype
+                       (second config)
+                       (error "Unknown mimetype for file ~s~%" file)))
+         (file-reader (or file-reader
+                          (third config)
+                          (error "Unknown file-reader for file ~s" file)))
+         (content (if cache-p (funcall file-reader file)
+                     (lambda () (funcall file-reader file)))))
+    (lambda (*req*)
+      (let ((*resp-headers* headers))
+        (http-ok mimetype (if cache-p content (funcall content)))))))
 
 
 (defun http-err (code text)
@@ -170,6 +275,9 @@ setting up variables, etc.
                             (append preamble handler-forms)))))
     `(progn ,@transformed)))
 
+(defun path-to-route-key (method path)
+  (cons method (split-sequence:split-sequence #\/ path)))
+
 
 (defmacro defroute (method path &rest body)
   "Defines a new route handler.
@@ -196,7 +304,7 @@ A handler is wrapped in an implicit block called
 CURRENT-HANDLER, allowing for non-local exits via (RETURN-FROM CURRENT-HANDLER ...)
 "
   (let* ((arglist (path-to-arglist path))
-         (key (cons method (split-sequence:split-sequence #\/ path)))
+         (key (path-to-route-key method path))
          (block-label (gensym "HANDLER"))
          (body-block `(block ,block-label
                        (flet ((http-ok (content-type &rest content)
@@ -267,13 +375,13 @@ for the request's path."
     (values nil nil)))
 
 
-(defun main-handler (req)
+(defun main-handler (*req*)
   (when *logging-p*
-    (format *logging-stream* "~a~%" req))
+    (format *logging-stream* "~a~%" *req*))
   (handler-case
-      (multiple-value-bind (args handler) (lookup-route req)
+      (multiple-value-bind (args handler) (lookup-route *req*)
         (if handler
-            (apply handler req args)
+            (apply handler *req* args)
             (http-err 404 "Not Found")))
     (error (e)
       (print e *error-output* )
