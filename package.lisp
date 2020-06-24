@@ -17,6 +17,7 @@
    #:*resp-headers*
    #:*logging-p*
    #:*logging-stream*
+   #:*fallback-response-mimetype*
    #:add-decoder
    #:add-header
    #:serve-directory
