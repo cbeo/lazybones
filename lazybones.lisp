@@ -172,7 +172,6 @@ an error will be signalled. See also REGISTER-FILE-HANDLER-CONFIG."
      (constantly t)
      (lambda (subdir)
        (dolist (file (uiop:directory-files subdir))
-         (print file)
          (add-route
           (append key-prefix
                   (clean-split-path (subseq (namestring file) prefix-len)))
@@ -325,7 +324,7 @@ CURRENT-HANDLER, allowing for non-local exits via (RETURN-FROM CURRENT-HANDLER .
                                   (funcall #'http-err code text))))
                          ,@body))))
     
-    (if (member method '(:post :put))
+    (if (member method '(:post :put :patch))
         `(add-route ',key
                     (lambda (*req* ,@arglist)
                       (let ((*body* (decode-body (getf *req* :raw-body)
