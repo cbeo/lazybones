@@ -151,7 +151,7 @@ where #HANDERL123 is a block label unique to the handler.
                *resp-headers*)
         content))
 
-(defun serve-directory (root-path root-dir &key headers cache-p)
+(defun serve-directory (root-path root-dir &key headers cache-p (filter #'identity))
   "Adds handlers for every file in the directory tree with the root ROOT-DIR.
 
 The if PATH is the file pathname relative to ROOT-DIR, then the route
@@ -159,6 +159,9 @@ added to serve the file located at PATH looks like ROOT-PATH/PATH.
 
 HEADERS and CACHE-P are passed to MAKE-FILE-HANDLER as the keyword
 arguments of the same names.
+
+The FILTER function is used to control which paths are added. It is a
+predicate. If it is NIL the path is skipped, otherwise the path is used.
 
 If the appropriate mimetype cannot be determined for any file
 encountered under the ROOT-DIR, then an error will be
@@ -172,10 +175,11 @@ an error will be signalled. See also REGISTER-FILE-HANDLER-CONFIG."
      (constantly t)
      (lambda (subdir)
        (dolist (file (uiop:directory-files subdir))
-         (add-route
-          (append key-prefix
-                  (clean-split-path (subseq (namestring file) prefix-len)))
-          (make-file-handler file :headers headers :cache-p cache-p)))))))
+         (when (funcall filter file)
+           (add-route
+            (append key-prefix
+                    (clean-split-path (subseq (namestring file) prefix-len)))
+            (make-file-handler file :headers headers :cache-p cache-p))))))))
 
 (defun make-file-handler
     (file &key
