@@ -132,7 +132,7 @@ E.G. Consider the form
 
 (http-ok \"text/plain\" \"OK\")  
 
-Outsidef of a DEFROUTE this returns the list
+Outside of a DEFROUTE this returns the list
 
 (200 (:CONTENT-TYPE \"text/plain\" :CONTENT-LENGTH 2) (\"OK\"))
 
