@@ -74,7 +74,7 @@ For example:
     ;; ... handle image post ...
     )
 
-  (defroute :delete "/image/:id
+  (defroute :delete "/image/:id"
      ;; ... handle image delete ...
      ))
 
