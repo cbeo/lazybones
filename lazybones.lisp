@@ -83,14 +83,12 @@ mimetype as a string, or NIL"
 definition."
   (setf (getf *resp-headers* key) val))
 
-
 (defun add-decoder (mimetype decoder)
   "Adds or replaces a DECODER function for supplied MIMETYPE"
   (if-let ((decoder-pair (assoc mimetype *decoders* :test #'string-equal)))
     (setf (cdr decoder-pair) decoder)
     (push (cons mimetype decoder)
           *decoders*)))
-
 
 (defun decode-body (stream content-type content-length)
   "Decodes the body according to the Content-Type header.
@@ -102,7 +100,6 @@ STREAM itself is returned unaltered.
                            :test (lambda (ct key) (starts-with-subseq key ct)))))
     (funcall (cdr decoder) stream  content-type content-length)
     stream))
-
 
 (defun content-length (content)
   "Utility for determining the Content-Length header for response bodies."
