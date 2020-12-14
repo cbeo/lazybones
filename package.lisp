@@ -25,6 +25,7 @@
    #:defroute
    #:http-err
    #:http-ok
+   #:http-redirect
    #:reload
    #:start
    #:stop

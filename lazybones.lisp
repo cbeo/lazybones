@@ -148,6 +148,11 @@ where #HANDERL123 is a block label unique to the handler.
                *resp-headers*)
         content))
 
+(defun http-redirect (location)
+  (list 303 (list* :location location
+                   *resp-headers*)
+        nil))
+
 (defun serve-directory (root-path root-dir &key headers cache-p (filter #'identity))
   "Adds handlers for every file in the directory tree with the root ROOT-DIR.
 
