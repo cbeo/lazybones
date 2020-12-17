@@ -87,11 +87,13 @@ ensure that your quicklisp can find
 - [parzival](https://github.com/cbeo/parzival) parser framework, for decoding request bodies
 - [replay-streams](https://github.com/cbeo/replay-streams) a dependency of parzival 
 
+
 The easiest approach is probably something like:
 
     cd ~/quicklisp/local-projects/ 
     git clone https://github.com/cbeo/parzival 
     git clone https://github.com/cbeo/replay-streams 
+    git clone https://github.com/cbeo/lazybones
     
 With those two packages available to quicklips, you should be able to do
 `(ql:quickload :lazybones)` in your REPL.
