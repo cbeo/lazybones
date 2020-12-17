@@ -95,7 +95,7 @@ The easiest approach is probably something like:
     git clone https://github.com/cbeo/replay-streams 
     git clone https://github.com/cbeo/lazybones
     
-With those two packages available to quicklips, you should be able to do
+With those packages available to quicklisp, you should be able to do
 `(ql:quickload :lazybones)` in your REPL.
 
 
