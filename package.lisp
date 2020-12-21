@@ -33,7 +33,7 @@
    ))
 
 (defpackage #:lazybones.decoders
-  (:use #:cl #:parzival)
+  (:use #:cl)
   (:import-from #:split-sequence
                 #:split-sequence)
   (:import-from #:arrows

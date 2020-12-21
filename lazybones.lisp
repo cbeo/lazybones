@@ -2,6 +2,8 @@
 
 (in-package #:lazybones)
 
+(clack.util:find-handler :hunchentoot) ;; temporary
+
 ;;; SPECIAL VARS
 
 (defvar *handler* nil
@@ -322,12 +324,12 @@ CURRENT-HANDLER, allowing for non-local exits via (RETURN-FROM CURRENT-HANDLER .
          (key (path-to-route-key method path))
          (block-label (gensym "HANDLER"))
          (body-block `(block ,block-label
-                       (flet ((http-ok (content-type &rest content)
-                                (return-from ,block-label
-                                  (apply #'http-ok content-type content)))
-                              (http-err (code text)
-                                (return-from ,block-label
-                                  (funcall #'http-err code text))))
+                        (flet ((http-ok (content-type &rest content)
+                                 (return-from ,block-label
+                                   (apply #'http-ok content-type content)))
+                               (http-err (code text)
+                                 (return-from ,block-label
+                                   (funcall #'http-err code text))))
                          ,@body))))
     
     (if (member method '(:post :put :patch))
@@ -389,6 +391,9 @@ for the request's path."
     ;; otherwise
     (values nil nil)))
 
+(defvar *debugging* nil
+  "Set to T to allow the main thread to drop into the debugger when
+  errors are encountered")
 
 (defun main-handler (*req*)
   (when *logging-p*
@@ -399,13 +404,15 @@ for the request's path."
             (apply handler *req* args)
             (http-err 404 "Not Found")))
     (error (e)
-      (print e *error-output* )
+      (if *debugging*
+          (invoke-debugger e)
+          (print e *error-output* ))
       (http-err 500 "Internal Server Error"))))
 
 
 
 (defun start (&key (port 5000))
-  (setf *handler* (clack:clackup #'main-handler :port port)))
+  (setf *handler* (clack:clackup 'main-handler :port port)))
 
 (defun stop ()
   (when *handler*

@@ -4,15 +4,15 @@
   :description "http route handling"
   :author "Colin Okay <cbeok@protonmail.com>"
   :license  "AGPLv3"
-  :version "0.1.0"
+  :version "0.2.0"
   :serial t
   :depends-on (#:clack
+               #:hunchentoot ;; temporary
                #:jonathan
                #:alexandria
                #:split-sequence
                #:do-urlencode
                #:arrows
-               #:parzival
                #:uiop
                #:cl-fad)
   :components ((:file "package")
