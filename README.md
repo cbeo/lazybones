@@ -84,12 +84,13 @@ For example:
 If you insist on trying `lazybones` for yourself, you'll need to
 ensure that your quicklisp can find  it.
 
+
 The easiest approach is probably something like:
 
     cd ~/quicklisp/local-projects/ 
     git clone https://github.com/cbeo/lazybones 
     
-With those two packages available to quicklips, you should be able to do
+With those packages available to quicklisp, you should be able to do
 `(ql:quickload :lazybones)` in your REPL.
 
 
