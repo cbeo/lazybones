@@ -8,6 +8,11 @@ It is not at all 'field tested', does not compete with more thorougly
 conceived frameworks, and is itself just a kind of wrapper around
 clack.
 
+I use lazybones for personal projects. Here are a few:
+
+- [Time Well Spent](https://github.com/cbeo/tws) is a time tracker with [EBS](https://www.joelonsoftware.com/2007/10/26/evidence-based-scheduling/) features.
+- [Compost](https://github.com/cbeo/compost) a message board in a single deployable binary, I use it for small group collaborations.
+
 # Basic Example
 
 ``` lisp
